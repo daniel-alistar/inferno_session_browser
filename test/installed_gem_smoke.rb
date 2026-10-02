@@ -13,7 +13,8 @@ Dir.mktmpdir('inferno-browser-installed') do |home|
   %w[before after].each do |mode|
     environment = ENV.to_h.select { |name, _| name.start_with?('BUNDLE_') }.transform_values { nil }
     environment.merge!('GEM_HOME' => home, 'GEM_PATH' => ([home] + dependency_paths).uniq.join(File::PATH_SEPARATOR),
-                       'RUBYOPT' => nil, 'RUBYLIB' => nil, 'RUBYGEMS_GEMDEPS' => nil, 'BROWSER_PACKAGED' => '1')
+                       'RUBYOPT' => nil, 'RUBYLIB' => nil, 'BUNDLER_SETUP' => nil,
+                       'RUBYGEMS_GEMDEPS' => nil, 'BROWSER_PACKAGED' => '1')
     output, error, status = Open3.capture3(environment, RbConfig.ruby, File.join(__dir__, 'host_smoke.rb'), mode)
     raise "Installed gem verification failed:\n#{output}\n#{error}" unless status.success?
     result = JSON.parse(output.lines.last)

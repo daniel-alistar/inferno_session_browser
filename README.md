@@ -143,7 +143,7 @@ Browser checks:
 ```sh
 npm install
 npx playwright install chromium
-npm run test:browser
+bundle exec npm run test:browser
 ```
 
 They start a local fixture server on `127.0.0.1:4568` and check pagination, filters, bookmarks, history, refresh controls, and failure recovery. To use installed Chrome, set `PLAYWRIGHT_BROWSER_CHANNEL=chrome`. Set `BROWSER_TEST_RUBY` to an explicit Ruby executable if needed. No browser tests contact your ONC instance.
