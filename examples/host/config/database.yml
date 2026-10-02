@@ -1,0 +1,4 @@
+development:
+  adapter: sqlite
+  database: data/demo.db
+  max_connections: 1

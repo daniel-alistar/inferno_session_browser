@@ -1,0 +1,55 @@
+name: Checks
+on: [push, pull_request]
+jobs:
+  ruby:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        inferno: ['1.4.0', '1.4.4']
+        database: [sqlite, postgres]
+    env:
+      INFERNO_CORE_VERSION: '${{ matrix.inferno }}'
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: browser_test
+          POSTGRES_PASSWORD: browser_test
+          POSTGRES_DB: inferno_browser_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+          bundler-cache: true
+      - name: Ruby and host checks
+        env:
+          TEST_DATABASE_URL: '${{ matrix.database == ''postgres'' && ''postgres://browser_test:browser_test@127.0.0.1:5432/inferno_browser_test'' || '''' }}'
+        run: bundle exec rspec
+      - name: Build and verify installed gem
+        run: |
+          mkdir -p pkg
+          gem build inferno_session_browser.gemspec --output pkg/inferno_session_browser-0.1.0.gem
+          bundle exec ruby test/installed_gem_smoke.rb pkg/inferno_session_browser-0.1.0.gem
+  browser:
+    runs-on: ubuntu-latest
+    env:
+      INFERNO_CORE_VERSION: '1.4.4'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3.6'
+          bundler-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser

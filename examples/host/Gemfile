@@ -1,0 +1,3 @@
+source 'https://rubygems.org'
+gem 'inferno_session_browser', path: '../..'
+gem 'inferno_core', ENV.fetch('INFERNO_CORE_VERSION', '1.4.4')

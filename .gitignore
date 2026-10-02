@@ -1,0 +1,16 @@
+/.bundle/
+/vendor/
+/pkg/
+/tmp/
+/Gemfile.lock
+/node_modules/
+/test-results/
+/output/
+/examples/host/data/
+/examples/host/log/
+/examples/host/tmp/
+/examples/host/.bundle/
+/examples/host/Gemfile.lock
+/.idea/
+*.gem
+.DS_Store

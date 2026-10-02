@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inferno Session Browser</title>
+  <link rel="stylesheet" href="<%= ERB::Util.html_escape(mount_path) %>/assets/<%= version %>/app.css">
+  <script defer src="<%= ERB::Util.html_escape(mount_path) %>/assets/<%= version %>/app.js"></script>
+</head>
+<body data-browser-path="<%= ERB::Util.html_escape(mount_path) %>">
+  <main>
+    <header class="page-header">
+      <div><p class="eyebrow">INFERNO</p><h1>Session Browser</h1><p class="subtitle">Explore test sessions and their run history.</p></div>
+      <div class="refresh-controls"><label><input id="auto-refresh" type="checkbox" checked> Refresh every 10 seconds</label><button id="refresh" type="button">Refresh now</button></div>
+    </header>
+    <form id="filters" aria-label="Session filters">
+      <div class="filter-grid">
+        <label>Session ID<input name="q" type="search" placeholder="Search session IDs"></label>
+        <label>Test suite<select name="suite_id"><option value="">All suites</option></select></label>
+        <label>FHIR server URL<input name="fhir_url" type="search" placeholder="Host or path"></label>
+        <label>Run state<select name="state"><option value="">All states</option><option value="never_run">Never run</option><option value="queued">Queued</option><option value="running">Running</option><option value="waiting">Waiting</option><option value="cancelling">Cancelling</option><option value="idle">Idle</option></select></label>
+        <label>Date field<select name="date_field"><option value="created_at">Created</option><option value="latest_activity">Latest activity</option></select></label>
+        <label>From (local time)<input name="from" type="datetime-local" step="1"></label>
+        <label>Until (exclusive, local time)<input name="to" type="datetime-local" step="1"></label>
+      </div>
+      <div id="option-filters" class="filter-grid"></div>
+      <div class="filter-actions"><button type="submit" class="primary">Apply filters</button><button id="clear-filters" type="button">Clear filters</button><span id="options-error" role="status"></span></div>
+    </form>
+    <div id="error" role="alert" hidden></div>
+    <section aria-label="Test sessions">
+      <div class="table-toolbar">
+        <p id="status" role="status" aria-live="polite">Loading sessions…</p>
+        <div class="sorting"><label>Sort by<select id="sort"><option value="latest_activity">Latest activity</option><option value="created_at">Created</option><option value="suite">Test suite</option></select></label><label>Order<select id="direction"><option value="desc">Descending</option><option value="asc">Ascending</option></select></label></div>
+      </div>
+      <div class="table-scroll"><table id="sessions-table" aria-busy="true"><caption class="sr-only">Test sessions. Expand a session to view its run history.</caption><thead><tr><th scope="col">Session</th><th scope="col">Suite / options</th><th scope="col">FHIR server</th><th scope="col"><button type="button" class="sort-heading" data-sort="created_at">Created</button></th><th scope="col"><button type="button" class="sort-heading" data-sort="latest_activity">Latest activity</button></th><th scope="col">Run state</th><th scope="col">Runs</th><th scope="col">Current test results</th><th scope="col">Actions</th></tr></thead><tbody id="session-rows"></tbody></table></div>
+      <p class="result-note">Result counts include optional tests. Run state and result counts do not indicate certification completion.</p>
+      <nav class="pagination" aria-label="Session pagination"><label>Rows per page<select id="page-size"><option value="25">25</option><option value="50">50</option><option value="100">100</option></select></label><div><button id="previous-page" type="button" disabled>Previous</button><span id="page-number">Page 1</span><button id="next-page" type="button" disabled>Next</button></div></nav>
+    </section>
+    <footer>Inferno Session Browser <%= version %> · Read-only</footer>
+  </main>
+</body>
+</html>
