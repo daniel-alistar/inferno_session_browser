@@ -3,18 +3,19 @@ RSpec.describe InfernoSessionBrowser::Middleware do
   include Rack::Test::Methods
   let(:delegate) { ->(_env) { [218, { 'Content-Type' => 'text/plain' }, ['original Inferno app']] } }
   let(:app) { described_class.new(delegate, configuration: @configuration, db: @db, registry: @registry) }
+  let(:version) { InfernoSessionBrowser::VERSION }
 
   it 'serves the page and packaged versioned assets' do
     get '/sessions'
     expect(last_response.status).to eq(200)
-    expect(last_response.body).to include('Session Browser', '/sessions/assets/0.1.0/app.js')
-    get '/sessions/assets/0.1.0/app.js'
+    expect(last_response.body).to include('Session Browser', "/sessions/assets/#{version}/app.js")
+    get "/sessions/assets/#{version}/app.js"
     expect(last_response.status).to eq(200)
     expect(last_response.headers['Content-Type']).to include('javascript')
     expect(last_response.headers['Cache-Control']).to include('immutable')
-    get '/sessions/assets/0.1.0/app.css'
+    get "/sessions/assets/#{version}/app.css"
     expect(last_response.status).to eq(200)
-    get '/sessions/assets/0.1.0/../version.rb'
+    get "/sessions/assets/#{version}/../version.rb"
     expect(last_response.status).to eq(404)
   end
 
@@ -100,7 +101,7 @@ RSpec.describe InfernoSessionBrowser::Middleware do
     it 'uses the prefix for API, assets, and existing session links' do
       create_session
       get '/inferno/history'
-      expect(last_response.body).to include('/inferno/history/assets/0.1.0/app.js')
+      expect(last_response.body).to include("/inferno/history/assets/#{version}/app.js")
       get '/inferno/history/api/sessions'
       expect(JSON.parse(last_response.body)['data'].first['session_url']).to eq('/inferno/demo/s1')
       get '/sessions'

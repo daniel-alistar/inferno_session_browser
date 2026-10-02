@@ -42,7 +42,10 @@ Dir.mktmpdir('inferno-browser-host') do |directory|
     connection.disconnect
     project = File.expand_path('..', __dir__)
     browser_dependency = if ENV['BROWSER_PACKAGED'] == '1'
-                           "gem 'inferno_session_browser', '= 0.1.0'"
+                           browser_version = ENV.fetch('BROWSER_GEM_VERSION') do
+                             Gem::Specification.find_by_name('inferno_session_browser').version.to_s
+                           end
+                           "gem 'inferno_session_browser', #{"= #{browser_version}".dump}"
                          else
                            "gem 'inferno_session_browser', path: #{project.dump}"
                          end
@@ -71,7 +74,8 @@ Dir.mktmpdir('inferno-browser-host') do |directory|
     raise 'Creation timestamp changed timezone' if (Time.iso8601(body['data'].first['created_at']).to_f - now.to_f).abs > 1
     raise 'Base path missing from session link' unless body['data'].first['session_url'] == '/inferno/browser_demo/existing'
     raise 'Original Inferno page failed' unless client.get('/inferno/browser_demo/existing').status == 200
-    raise 'Packaged asset missing' unless client.get('/inferno/sessions/assets/0.1.0/app.js').status == 200
+    asset_path = "/inferno/sessions/assets/#{InfernoSessionBrowser::VERSION}/app.js"
+    raise 'Packaged asset missing' unless client.get(asset_path).status == 200
     count = Inferno::Web.singleton_class.ancestors.count { |ancestor| ancestor == InfernoSessionBrowser::WebAppExtension }
     raise 'Repeated require registered twice' unless count == 1
     puts JSON.generate(core_version: Inferno::VERSION, version: InfernoSessionBrowser::VERSION, mode: mode,

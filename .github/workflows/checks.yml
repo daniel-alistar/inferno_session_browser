@@ -35,8 +35,10 @@ jobs:
       - name: Build and verify installed gem
         run: |
           mkdir -p pkg
-          gem build inferno_session_browser.gemspec --output pkg/inferno_session_browser-0.1.0.gem
-          bundle exec ruby test/installed_gem_smoke.rb pkg/inferno_session_browser-0.1.0.gem
+          gem_file="$(ruby -e 'print Gem::Specification.load("inferno_session_browser.gemspec").file_name')"
+          gem_package="pkg/${gem_file}"
+          gem build inferno_session_browser.gemspec --output "$gem_package"
+          bundle exec ruby test/installed_gem_smoke.rb "$gem_package"
   browser:
     runs-on: ubuntu-latest
     env:

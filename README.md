@@ -14,10 +14,10 @@ Runtime assets are shipped in the gem. Installation requires no npm, frontend bu
 
 ## Add to an ONC host
 
-For local development, with sibling repositories, add this to the host's `Gemfile`:
+For a published release, add the gem from RubyGems.org to the host's `Gemfile`:
 
 ```ruby
-gem 'inferno_session_browser', path: '../inferno_session_browser'
+gem 'inferno_session_browser', '~> 0.1.0'
 ```
 
 Add this to `lib/onc_certification_g10_test_kit.rb` before the host constructs `Inferno::Web.app`:
@@ -30,11 +30,15 @@ Then run `bundle install` in the host and restart its web process. The `require`
 
 The gem may be loaded before or after Inferno's web provider, provided it is loaded before the application is constructed. Requiring it repeatedly registers one adapter. Worker/CLI loading does not initialize a database or load the web provider.
 
-After installing the built gem from a local file or your own gem source, replace the path dependency with:
+### Local development
+
+With sibling repositories, use a path dependency in the host's `Gemfile`:
 
 ```ruby
-gem 'inferno_session_browser', '~> 0.1.0'
+gem 'inferno_session_browser', path: '../inferno_session_browser'
 ```
+
+Keep the same `require` line, run `bundle install` in the host, and restart its web process after changes.
 
 ## Docker / Podman with an unpublished gem
 
@@ -43,12 +47,15 @@ A sibling path is outside ONC's Docker build context. Vendor the packaged source
 ```sh
 # In the gem repository:
 mkdir -p pkg
-gem build inferno_session_browser.gemspec --output pkg/inferno_session_browser-0.1.0.gem
+gem_file="$(ruby -e 'print Gem::Specification.load("inferno_session_browser.gemspec").file_name')"
+gem build inferno_session_browser.gemspec --output "pkg/$gem_file"
 
 # In the ONC host repository:
 mkdir -p vendor
 gem unpack ../inferno_session_browser/pkg/inferno_session_browser-0.1.0.gem --target vendor
 ```
+
+The vendor paths here illustrate version `0.1.0`; use the version of the archive you built.
 
 Use the host dependency:
 
@@ -148,16 +155,25 @@ bundle exec npm run test:browser
 
 They start a local fixture server on `127.0.0.1:4568` and check pagination, filters, bookmarks, history, refresh controls, and failure recovery. To use installed Chrome, set `PLAYWRIGHT_BROWSER_CHANNEL=chrome`. Set `BROWSER_TEST_RUBY` to an explicit Ruby executable if needed. No browser tests contact your ONC instance.
 
-GitHub Actions runs the database/core matrix plus browser checks. Build and install locally:
+GitHub Actions runs the database/core matrix plus browser checks. Build and verify the package locally:
 
 ```sh
 mkdir -p pkg
-gem build inferno_session_browser.gemspec --output pkg/inferno_session_browser-0.1.0.gem
-gem install --local pkg/inferno_session_browser-0.1.0.gem
+gem_file="$(ruby -e 'print Gem::Specification.load("inferno_session_browser.gemspec").file_name')"
+gem build inferno_session_browser.gemspec --output "pkg/$gem_file"
+bundle exec ruby test/installed_gem_smoke.rb "pkg/$gem_file"
+```
+
+The check installs the archive into a temporary gem home, boots both load orders, and verifies that the library and reported version come from that package. Omitting its argument selects the package filename from the current gemspec.
+
+For a shared-gem setup, you can also install the archive and check a standalone host:
+
+```sh
+gem install --local "pkg/$gem_file"
 BROWSER_PACKAGED=1 ruby test/host_smoke.rb before
 ```
 
-The last check loads the installed gem into an isolated ONC-style host. No source-path override is used in that check. For an isolated install that also works with Bundler-managed dependency locations, run `bundle exec ruby test/installed_gem_smoke.rb pkg/inferno_session_browser-0.1.0.gem`. Publication and live deployment are separate steps.
+See [RELEASING.md](RELEASING.md) for the manual release procedure, including RubyGems account setup, version updates, Git tags, and publishing checks.
 
 ## License
 
